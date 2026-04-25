@@ -24,6 +24,11 @@ st.write("Upload your resume and find best job role using Machine Learning")
 
 df = pd.read_excel("resume_dataset.xlsx")
 
+# ✅ NEW FIX (DO NOT REMOVE)
+df.columns = df.columns.str.strip()
+df = df.dropna()
+df = df.dropna(subset=["Resume", "Category"])
+
 # ------------------------
 # CLEAN TEXT
 # ------------------------
@@ -56,26 +61,21 @@ def create_pdf(prediction, top_jobs, top_scores, skills, score, missing, advice,
     styles = getSampleStyleSheet()
     content = []
 
-    # TITLE
     content.append(Paragraph("<font size=18 color=blue><b>AI Resume ATS Report</b></font>", styles['Title']))
     content.append(Spacer(1, 15))
 
-    # ATS SCORE
     ats_score = min(score + 10, 100)
     content.append(Paragraph(f"<font color=green><b>ATS Score:</b> {ats_score}/100</font>", styles['Normal']))
     content.append(Spacer(1, 10))
 
-    # PREDICTION
     content.append(Paragraph(f"<b>Predicted Role:</b> {prediction}", styles['Normal']))
     content.append(Spacer(1, 10))
 
-    # TOP JOBS
     content.append(Paragraph("<font color=purple><b>Top Job Matches:</b></font>", styles['Heading2']))
     for job, sc in zip(top_jobs, top_scores):
         content.append(Paragraph(f"{job} - {sc}%", styles['Normal']))
     content.append(Spacer(1, 10))
 
-    # GRAPH
     plt.figure()
     plt.bar(top_jobs, top_scores)
     plt.title("Top Job Matches")
@@ -87,25 +87,20 @@ def create_pdf(prediction, top_jobs, top_scores, skills, score, missing, advice,
     content.append(Image(graph_path, width=400, height=250))
     content.append(Spacer(1, 10))
 
-    # SKILLS
     content.append(Paragraph("<font color=orange><b>Skills Found:</b></font>", styles['Heading2']))
     content.append(Paragraph(", ".join(skills), styles['Normal']))
     content.append(Spacer(1, 10))
 
-    # STRONG AREA
     content.append(Paragraph(f"<b>Strong Area:</b> {strong_area}", styles['Normal']))
     content.append(Spacer(1, 10))
 
-    # SCORE
     content.append(Paragraph(f"<b>Resume Score:</b> {score}/100", styles['Normal']))
     content.append(Spacer(1, 10))
 
-    # MISSING
     content.append(Paragraph("<font color=red><b>Recommended Skills:</b></font>", styles['Heading2']))
     content.append(Paragraph(", ".join(missing), styles['Normal']))
     content.append(Spacer(1, 10))
 
-    # ADVICE
     content.append(Paragraph("<b>Career Advice:</b>", styles['Heading2']))
     content.append(Paragraph(advice, styles['Normal']))
 
@@ -145,11 +140,9 @@ if uploaded_file is not None:
 
     top3_index = np.argsort(probs)[-3:][::-1]
 
-    # OUTPUT
     st.subheader("Predicted Job Role")
     st.success(prediction)
 
-    # TOP JOBS
     st.subheader("Top 3 Suitable Jobs")
 
     top_jobs = []
@@ -164,14 +157,12 @@ if uploaded_file is not None:
 
         st.write(job," - ",score_val,"%")
 
-    # GRAPH
     st.subheader("Job Match Graph")
 
     plt.figure()
     plt.bar(top_jobs, top_scores)
     st.pyplot(plt)
 
-    # SKILLS
     detected_skills = []
 
     for category in skills_db:
@@ -182,11 +173,9 @@ if uploaded_file is not None:
     st.subheader("Skills Found in Resume")
     st.write(detected_skills)
 
-    # SKILL COUNT
     st.subheader("Total Skills Found")
     st.write(len(detected_skills))
 
-    # STRONG AREA
     ml_count = prog_count = web_count = iot_count = 0
 
     for skill in detected_skills:
@@ -214,13 +203,11 @@ if uploaded_file is not None:
 
     st.write(strong_area_text)
 
-    # SCORE
     score = min(len(detected_skills)*8,100)
 
     st.subheader("Resume Score")
     st.write(str(score) + " / 100")
 
-    # MISSING
     ds_skills = ["python","machine learning","statistics","sql","deep learning"]
 
     missing = []
@@ -231,7 +218,6 @@ if uploaded_file is not None:
     st.subheader("Recommended Skills to Improve")
     st.write(missing)
 
-    # ADVICE
     st.subheader("Career Advice")
 
     if score < 40:
@@ -243,7 +229,6 @@ if uploaded_file is not None:
 
     st.write(advice_text)
 
-    # DOWNLOAD REPORT
     st.subheader("Download Report")
 
     pdf_file = create_pdf(
